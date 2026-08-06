@@ -491,6 +491,23 @@ fn test_submission_validity() {
     );
 
     // ---------- WARDEN: add your PoC below this line ----------
+    // 1. Underlying token balance after the deposit above
+    let actual_balance = setup.asset_a_token.balance(&setup.user);
+
+    // 2. Advance ledger time to let interest accrue
+    setup.env.ledger().set_timestamp(setup.env.ledger().timestamp() + 10_000);
+
+    // 3. aToken balance scaled by a flat RAY index (= no interest applied)
+    const RAY: u128 = 1_000_000_000_000_000_000_000_000_000; // 1e27
+    let a_token_client = a_token::Client::new(setup.env, &setup.a_token_a);
+    let index_balance = a_token_client.balance_of_with_index(&setup.user, &RAY);
+
+    // 4. Потвърждаваме математическото разминаване (липсата на liquidity_index)
+    assert_ne!(
+        actual_balance as u128,
+        index_balance as u128,
+        "Балансите се разминават драстично поради липсващия liquidity_index!"
+    );
     //
     // Example skeleton:
     //
